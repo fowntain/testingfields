@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Game</title>
+</head>
+<body>
+  <h1>Add Game</h1>
+  <form id="gameForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" required><br>
+    <label for="source">Source URL:</label>
+    <input type="text" id="source" required><br>
+    <label for="image">Image URL:</label>
+    <input type="text" id="image" required><br>
+    <label for="id">ID:</label>
+    <input type="text" id="id" required><br>
+    <button type="submit">Add Game</button>
+  </form>
+
+  <script>
+    document.getElementById("gameForm").addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      // Get the form values
+      var name = document.getElementById("name").value;
+      var source = document.getElementById("source").value;
+      var image = document.getElementById("image").value;
+      var id = document.getElementById("id").value;
+
+      // Create the new game object
+      var game = {
+        "name": name,
+        "source": source,
+        "image": image,
+        "id": id,
+        "desc": ""
+      };
+
+      // Get the existing games list from the GitHub repository
+      var url = "https://api.github.com/repos/Skoolgq/Polaris/contents/static/assets/JSON/games.json";
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.setRequestHeader("Authorization", "Bearer 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");
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          var data = JSON.parse(xhr.responseText);
+          var content = atob(data.content);
+
+          // Decode the existing games list from Base64
+          var gamesList = JSON.parse(content);
+
+          // Append the new game to the list
+          gamesList.push(game);
+
+          // Encode the updated games list to Base64
+          var updatedContent = btoa(JSON.stringify(gamesList));
+
+          // Prepare the data for the GitHub API
+          var requestData = {
+            "message": "Add new game",
+            "content": updatedContent,
+            "sha": data.sha
+          };
+
+          // Update the games list in the GitHub repository
+          var updateXhr = new XMLHttpRequest();
+          updateXhr.open("PUT", url, true);
+          updateXhr.setRequestHeader("Authorization", "Bearer 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");
+          updateXhr.onload = function() {
+            if (updateXhr.status === 200) {
+              alert("Game added successfully!");
+            } else {
+              alert("Failed to add game. Error: " + updateXhr.responseText);
+            }
+          };
+          updateXhr.send(JSON.stringify(requestData));
+        } else {
+          alert("Failed to get existing games list. Error: " + xhr.responseText);
+        }
+      };
+      xhr.send();
+    });
+  </script>
+</body>
+</html>
